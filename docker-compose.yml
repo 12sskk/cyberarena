@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  cyberarena:
+    build: .
+    container_name: cyberarena-hub
+    ports:
+      - "5000:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./arena_data:/app/arena_data
+    environment:
+      - FLASK_ENV=production
+      - PORT=5000
+    restart: unless-stopped

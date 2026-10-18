@@ -1,48 +1,109 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>CyberArena Login</title>
-
-<link
-rel="stylesheet"
-href="/static/style.css">
-
+  <meta charset="UTF-8">
+  <title>Cyber Arena | Auth Terminal</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
+  <div style="display: flex; flex-direction: column; min-height: 100vh;">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;">
 
-<div class="card">
+      <!-- GlitchLogo -->
+      <div style="text-align: center; margin: 1.5rem 0;" class="fade-in">
+        <h1 class="mono" style="font-size: 3rem; color: var(--text); margin: 0; text-transform: uppercase; letter-spacing: 0.12em;">
+          CYBER <span class="glitch" data-text="ARENA" style="color: var(--green); text-shadow: 0 0 12px rgba(57,255,136,0.5);">ARENA</span>
+        </h1>
+        <p class="mono" style="color: var(--green); margin-top: 0.6rem; letter-spacing: 0.25em; font-size: 0.8rem; opacity: 0.85;">
+          SHARED DOCKER CAPTURE THE FLAG PLATFORM<span class="caret">_</span>
+        </p>
+      </div>
 
-<h1>CyberArena</h1>
+      <!-- AUTH_TERMINAL Panel -->
+      <div style="width: 100%; max-width: 440px;" class="fade-in">
+        <div class="terminal-panel">
+          <div class="terminal-header">
+            <span class="mono" id="panel-title" style="color: var(--green); margin-right: 1rem; font-weight: bold;">AUTH_TERMINAL // LOGIN</span>
+            <div style="flex: 1;"></div>
+            <span class="dot red"></span>
+            <span class="dot amber"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="terminal-body mono">
+            {% if error %}
+              <div class="mono" style="color: var(--red); border: 1px solid var(--red); background: rgba(255,51,51,0.08); padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                &gt; ERROR: {{ error }}
+              </div>
+            {% endif %}
 
-<form method="POST">
+            <form method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
+              <input type="hidden" name="action" id="auth-action" value="login">
 
-<input
-type="text"
-name="username"
-placeholder="Username"
-required>
+              <div>
+                <label class="mono" style="display: block; color: var(--green); margin-bottom: 0.4rem; font-size: 0.85rem;">USERNAME:</label>
+                <input type="text" name="username" class="field mono" autocomplete="username" autofocus required placeholder="admin / alice / bob">
+              </div>
 
-<input
-type="password"
-name="password"
-placeholder="Password"
-required>
+              <div>
+                <label class="mono" style="display: block; color: var(--green); margin-bottom: 0.4rem; font-size: 0.85rem;">PASSWORD:</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" name="password" id="pwd-input" class="field mono" style="padding-right: 2.5rem;" required placeholder="••••••••">
+                  <span onclick="togglePwd()" style="position: absolute; right: 0.6rem; cursor: pointer; color: var(--green); font-size: 0.75rem;" id="eye-toggle">
+                    [SHOW]
+                  </span>
+                </div>
+              </div>
 
-<button type="submit">
-Login
-</button>
+              <button type="submit" id="submit-btn" class="btn mono" style="margin-top: 0.5rem;">
+                [ INITIALIZE SESSION ]
+              </button>
+            </form>
 
-</form>
+            <div style="margin-top: 1.2rem; padding-top: 0.8rem; border-top: 1px solid rgba(57,255,136,0.2); font-size: 0.75rem; color: var(--muted);">
+              &gt; TEST OPERATIVES: <span style="color: var(--green);">admin / admin123</span> | <span style="color: var(--cyan);">alice / alice123</span> | <span style="color: var(--amber);">bob / bob123</span>
+            </div>
+          </div>
+        </div>
 
-<p>
-admin / admin123
-</p>
+        <p class="mono" style="text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 1rem;">
+          <span id="switch-prompt">New operator?</span>
+          <span onclick="switchMode()" id="switch-link" style="color: var(--green); cursor: pointer; text-decoration: underline;">
+            Register here
+          </span>
+        </p>
+      </div>
+    </div>
 
-</div>
+    <!-- Scrolling Cyber Ticker -->
+    <div class="mono ticker-wrap" style="color: var(--green); border-top: 1px solid var(--green); border-bottom: 1px solid var(--green); padding: 0.5rem 0; font-size: 0.8rem; background-color: rgba(57, 255, 136, 0.05);">
+      <div class="ticker-track">
+        <span style="padding-right: 2rem;">18 SHARED DOCKER MODULES ONLINE   //   FIRST OPERATOR DEPLOYS CONTAINER   //   ALL OPERATORS SHARE LIVE INSTANCE   //   CHRONO-VAULT ACTIVE   //   QUANTUM LEDGER ONLINE   //   BITWISE REACTOR ARMED   //   FIRST BLOOD +50 PTS BONUS</span>
+        <span style="padding-right: 2rem;">18 SHARED DOCKER MODULES ONLINE   //   FIRST OPERATOR DEPLOYS CONTAINER   //   ALL OPERATORS SHARE LIVE INSTANCE   //   CHRONO-VAULT ACTIVE   //   QUANTUM LEDGER ONLINE   //   BITWISE REACTOR ARMED   //   FIRST BLOOD +50 PTS BONUS</span>
+      </div>
+    </div>
+  </div>
 
+<script>
+let isRegister = false;
+function switchMode() {
+  isRegister = !isRegister;
+  document.getElementById('auth-action').value = isRegister ? 'register' : 'login';
+  document.getElementById('panel-title').textContent = isRegister ? 'AUTH_TERMINAL // REGISTER' : 'AUTH_TERMINAL // LOGIN';
+  document.getElementById('submit-btn').textContent = isRegister ? '[ CREATE ACCOUNT ]' : '[ INITIALIZE SESSION ]';
+  document.getElementById('switch-prompt').textContent = isRegister ? 'Already enrolled?' : 'New operator?';
+  document.getElementById('switch-link').textContent = isRegister ? 'Log in' : 'Register here';
+}
+function togglePwd() {
+  const inp = document.getElementById('pwd-input');
+  const btn = document.getElementById('eye-toggle');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '[HIDE]';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '[SHOW]';
+  }
+}
+</script>
 </body>
-
 </html>

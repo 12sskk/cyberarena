@@ -1,74 +1,537 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>CyberArena Dashboard</title>
-
-<link
-rel="stylesheet"
-href="/static/style.css">
-
+  <meta charset="UTF-8">
+  <title>Cyber Arena | Challenges</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<div class="card">
+  <!-- CyberArena NavBar -->
+  <nav class="mono" style="position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 0.6rem 1.2rem; background: rgba(5, 8, 10, 0.97); border-bottom: 1px solid var(--green); box-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);">
+    <div onclick="showTab('challenges')" style="cursor: pointer; font-weight: bold; letter-spacing: 0.12em; font-size: 1.05rem; color: var(--text); white-space: nowrap;">
+      CYBER<span style="color: var(--green); text-shadow: 0 0 10px rgba(57,255,136,0.5);">ARENA</span>
+      <span style="font-size: 0.72rem; color: var(--cyan); margin-left: 0.75rem; border: 1px solid var(--cyan); padding: 0.15rem 0.45rem;" id="nav-active-containers">
+        SHARED DOCKER NODES: {{ engine.active_containers }}/{{ total_challenges }}
+      </span>
+    </div>
 
-<h1>CyberArena</h1>
+    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
+      <button id="tab-btn-challenges" onclick="showTab('challenges')" class="mono" style="background: var(--green); color: #000; border: 1px solid var(--green); padding: 0.35rem 0.75rem; cursor: pointer; font-size: 0.78rem; font-weight: bold; letter-spacing: 0.03em;">
+        CHALLENGES
+      </button>
+      <button id="tab-btn-leaderboard" onclick="showTab('leaderboard')" class="mono" style="background: transparent; color: var(--green); border: 1px solid var(--green); padding: 0.35rem 0.75rem; cursor: pointer; font-size: 0.78rem; font-weight: bold; letter-spacing: 0.03em;">
+        LEADERBOARD
+      </button>
+      <button id="tab-btn-profile" onclick="showTab('profile')" class="mono" style="background: transparent; color: var(--green); border: 1px solid var(--green); padding: 0.35rem 0.75rem; cursor: pointer; font-size: 0.78rem; font-weight: bold; letter-spacing: 0.03em;">
+        {{ username | upper }}
+      </button>
 
-<h3>Available Challenges</h3>
+      <span style="border: 1px solid var(--amber); color: var(--amber); padding: 0.35rem 0.75rem; font-weight: bold; font-size: 0.78rem;" id="nav-pts">
+        0 PTS
+      </span>
 
-<a href="/start/sql">
+      <a href="/logout" style="text-decoration: none; background: transparent; border: 1px solid var(--red); color: var(--red); padding: 0.35rem 0.75rem; cursor: pointer; font-size: 0.78rem; font-weight: bold;">
+        EXIT
+      </a>
+    </div>
+  </nav>
 
-<button>
-SQL Injection Challenge
-</button>
+  <!-- ==================== TAB 1: CHALLENGES ==================== -->
+  <div id="view-challenges" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+    <div style="text-align: center; margin: 1.5rem 0;" class="fade-in">
+      <h1 class="mono" style="font-size: 3rem; color: var(--text); margin: 0; text-transform: uppercase; letter-spacing: 0.12em;">
+        SELECT <span class="glitch" data-text="CHALLENGE" style="color: var(--green); text-shadow: 0 0 12px rgba(57,255,136,0.5);">CHALLENGE</span>
+      </h1>
+      <p class="mono" style="color: var(--green); margin-top: 0.6rem; letter-spacing: 0.25em; font-size: 0.8rem; opacity: 0.85;">
+        FIRST OPERATOR DEPLOYS DOCKER // ALL OPERATORS SHARE THE LIVE CONTAINER<span class="caret">_</span>
+      </p>
+    </div>
 
-</a>
+    <!-- OPERATIVE_STATUS TerminalPanel -->
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <span class="mono" style="color: var(--green); margin-right: 1rem; font-weight: bold;">OPERATIVE_STATUS</span>
+        <div style="flex: 1;"></div>
+        <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+      </div>
+      <div class="terminal-body mono">
+        <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; justify-content: space-between;">
+          <div class="mono" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div><span id="stat-solved" style="color: var(--green); font-size: 1.5rem; font-weight: bold;">{{ solved_count }}</span><span style="color: var(--muted);">/{{ total_challenges }} SOLVED</span></div>
+            <div><span id="stat-points" style="color: var(--amber); font-size: 1.5rem; font-weight: bold;">0</span><span style="color: var(--muted);">/4450 PTS</span></div>
+            <div><span id="stat-fb" style="color: var(--red); font-size: 1.5rem; font-weight: bold;">0</span><span style="color: var(--muted);"> FIRST BLOODS</span></div>
+          </div>
+          <div style="flex: 1 1 200px; min-width: 180px;">
+            <div style="height: 10px; background: rgba(57,255,136,0.12); border: 1px solid var(--green); overflow: hidden;">
+              <div id="stat-bar" style="width: 0%; height: 100%; background: var(--green); box-shadow: 0 0 10px var(--green); transition: width 0.4s ease;"></div>
+            </div>
+            <div id="stat-pct" class="mono" style="text-align: right; color: var(--green); font-size: 0.75rem; margin-top: 0.25rem;">0% COMPLETE</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<br><br>
+    <!-- Search + Difficulty / Category Filter -->
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin: 1.5rem 0;">
+      <input id="search-input" class="field mono" placeholder="&gt; search 18 challenges or categories..." oninput="filterChallenges()" style="flex: 1 1 240px;">
+      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+        <button onclick="setDiffFilter('ALL')" id="filter-ALL" class="mono" style="background: var(--green); color: #000; border: 1px solid var(--green); padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.8rem; font-weight: bold;">ALL</button>
+        <button onclick="setDiffFilter('Easy')" id="filter-Easy" class="mono" style="background: transparent; color: var(--green); border: 1px solid var(--green); padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.8rem; font-weight: bold;">EASY</button>
+        <button onclick="setDiffFilter('Medium')" id="filter-Medium" class="mono" style="background: transparent; color: var(--green); border: 1px solid var(--green); padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.8rem; font-weight: bold;">MEDIUM</button>
+        <button onclick="setDiffFilter('Hard')" id="filter-Hard" class="mono" style="background: transparent; color: var(--green); border: 1px solid var(--green); padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.8rem; font-weight: bold;">HARD</button>
+      </div>
+    </div>
 
-<a href="/start/cookie">
+    <!-- 18 Challenges Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;" id="challenges-grid">
+      {% for c in challenges %}
+      <div class="challenge-card fade-in"
+           id="card-{{ c.id }}"
+           data-title="{{ c.title | lower }} {{ c.category | lower }} {{ c.id | lower }}"
+           data-diff="{{ c.difficulty }}"
+           onclick="openModuleDetail('{{ c.id }}')">
+        <div class="terminal-panel">
+          <div class="terminal-header">
+            <span class="mono" style="color: var(--green); margin-right: 1rem; font-weight: bold;">CHALLENGE_{{ "%02d" | format(loop.index) }}</span>
+            <div style="flex: 1;"></div>
+            <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+          </div>
+          <div class="terminal-body mono">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+              <h3 style="color: var(--green); margin-top: 0; margin-bottom: 0.4rem;">{{ c.title }}</h3>
+              <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; justify-content: flex-end;" id="badges-{{ c.id }}">
+                {% if c.solved %}
+                  <span style="background: var(--green); color: black; padding: 0.15rem 0.45rem; font-size: 0.72rem; font-weight: bold;">SOLVED</span>
+                {% endif %}
+                {% if c.status.running %}
+                  <span style="border: 1px solid var(--amber); color: var(--amber); padding: 0.1rem 0.45rem; font-size: 0.72rem;">ACTIVE ({{ c.status.operator_count }} SHARED)</span>
+                {% endif %}
+              </div>
+            </div>
 
-<button>
-Cookie Tampering Challenge
-</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; color: var(--amber); margin: 0.4rem 0 0.75rem 0; font-size: 0.8rem;">
+              <span>CAT: {{ c.category }}</span>
+              <span>PTS: {{ c.points }}</span>
+              <span class="diff-badge diff-{{ c.difficulty | lower }}">{{ c.difficulty }}</span>
+            </div>
 
-</a>
+            <p style="margin: 0; min-height: 3rem; font-size: 0.88rem; color: var(--text); line-height: 1.45;">{{ c.description }}</p>
 
-<br><br>
+            <!-- Shared Docker Telemetry Box -->
+            <div id="shared-info-{{ c.id }}" style="margin-top: 0.85rem; padding: 0.5rem 0.65rem; border: 1px dashed rgba(57,255,136,0.3); background: rgba(0,0,0,0.4); font-size: 0.75rem;">
+              {% if c.status.running %}
+                <div style="color: var(--green);">● CONTAINER ONLINE [ID: {{ c.status.container_id }} | :{{ c.status.port }}]</div>
+                <div style="color: var(--cyan); margin-top: 0.2rem;">SHARED BY ({{ c.status.operator_count }}): {{ c.status.operators | join(', ') }}</div>
+              {% else %}
+                <div style="color: var(--muted);">○ STANDBY [{{ c.container_name }}] — Deploys on first open</div>
+              {% endif %}
+            </div>
 
-<a href="/start/idor">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 1rem;">
+              <div id="card-left-btn-{{ c.id }}">
+                {% if c.status.running %}
+                  <button onclick="event.stopPropagation(); stopContainer('{{ c.id }}');" class="mono" style="background: transparent; border: 1px solid var(--red); color: var(--red); padding: 0.2rem 0.5rem; cursor: pointer; font-size: 0.78rem;">
+                    [ TERMINATE ]
+                  </button>
+                {% endif %}
+              </div>
+              <div class="mono" style="color: var(--green); font-size: 0.88rem; font-weight: bold;">[ SELECT ] &gt;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 
-<button>
-IDOR Challenge
-</button>
+  <!-- ==================== TAB 2: MODULE DETAIL VIEW ==================== -->
+  <div id="view-detail" style="display: none; max-width: 900px; margin: 0 auto; padding: 2rem;" class="fade-in">
+    <button onclick="showTab('challenges')" class="btn-ghost mono" style="margin-bottom: 1rem;">&lt; [ BACK TO CHALLENGES ]</button>
 
-</a>
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <span class="mono" id="detail-header-title" style="color: var(--green); margin-right: 1rem; font-weight: bold;">MODULE_DETAIL</span>
+        <div style="flex: 1;"></div>
+        <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+      </div>
+      <div class="terminal-body mono">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <h2 id="detail-title" style="color: var(--green); margin-top: 0;"></h2>
+          <span id="detail-solved-badge" style="display: none; background: var(--green); color: black; padding: 0.3rem 0.6rem; font-size: 0.9rem; font-weight: bold;">SOLVED</span>
+        </div>
+        <div style="display: flex; gap: 1.5rem; align-items: center; color: var(--amber); margin-bottom: 1rem;">
+          <span id="detail-cat"></span>
+          <span id="detail-pts"></span>
+          <span id="detail-diff" class="diff-badge diff-easy"></span>
+        </div>
+        <p id="detail-desc" style="line-height: 1.55;"></p>
+        <p id="detail-mechanic" style="color: var(--cyan); font-size: 0.85rem; border-left: 2px solid var(--cyan); padding-left: 0.75rem;"></p>
 
-<br><br>
+        <div id="detail-deploy-area" style="margin-top: 1.25rem;">
+          <button id="detail-deploy-btn" onclick="deployCurrentModule()" class="btn mono">
+            [ DEPLOY / JOIN SHARED INSTANCE ]
+          </button>
+        </div>
+      </div>
+    </div>
 
-<a href="/start/roman">
+    <!-- CONNECTION_ESTABLISHED Panel -->
+    <div id="detail-connection-panel" style="display: none; margin-top: 1.5rem;">
+      <div class="terminal-panel">
+        <div class="terminal-header">
+          <span class="mono" style="color: var(--green); margin-right: 1rem; font-weight: bold;">CONNECTION_ESTABLISHED</span>
+          <div style="flex: 1;"></div>
+          <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+        </div>
+        <div class="terminal-body mono">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <p style="margin: 0 0 0.5rem 0;">
+                TARGET: <a id="detail-target-link" href="#" target="_blank" rel="noreferrer" style="color: var(--green); font-weight: bold;"></a>
+              </p>
+              <p id="detail-shared-ops" style="margin: 0 0 1rem 0; font-size: 0.82rem; color: var(--cyan);"></p>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a id="detail-open-tab-btn" href="#" target="_blank" class="btn mono" style="text-decoration: none; padding: 0.35rem 0.8rem; font-size: 0.82rem;">[ OPEN TARGET WEBSITE ↗ ]</a>
+                <button onclick="restartCurrentModule()" class="mono" style="background: transparent; border: 1px solid var(--amber); color: var(--amber); padding: 0.35rem 0.8rem; cursor: pointer;">[ RESTART ]</button>
+                <button onclick="stopCurrentModule()" class="mono" style="background: transparent; border: 1px solid var(--red); color: var(--red); padding: 0.35rem 0.8rem; cursor: pointer;">[ TERMINATE ]</button>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: var(--text); font-size: 0.75rem; margin-bottom: 0.3rem;">STATUS</div>
+              <div style="color: var(--green); font-weight: bold;" id="detail-container-id">ACTIVE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<button>
-Roman Challenge
-</button>
+    <!-- SUBMIT_FLAG TerminalPanel -->
+    <div class="terminal-panel" style="margin-top: 1.5rem;">
+      <div class="terminal-header">
+        <span class="mono" style="color: var(--green); margin-right: 1rem; font-weight: bold;">SUBMIT_FLAG</span>
+        <div style="flex: 1;"></div>
+        <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+      </div>
+      <div class="terminal-body mono">
+        <form onsubmit="submitCurrentFlag(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--green);">$ submit flag&gt;</span>
+            <input type="text" id="detail-flag-input" class="mono" style="flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--green); color: var(--text); outline: none; padding: 0.3rem;" placeholder="FLAG{...}" autocomplete="off" spellcheck="false">
+          </div>
+          <div id="detail-flag-status" style="min-height: 1.5rem; display: flex; align-items: center;"></div>
+          <button type="submit" class="btn-ghost mono" style="align-self: flex-start;">[ EXECUTE ]</button>
+        </form>
+      </div>
+    </div>
+  </div>
 
-</a>
+  <!-- ==================== TAB 3: LEADERBOARD ==================== -->
+  <div id="view-leaderboard" style="display: none; max-width: 900px; margin: 0 auto; padding: 2rem;" class="fade-in">
+    <div style="text-align: center; margin: 1.5rem 0;">
+      <h1 class="mono" style="font-size: 3rem; color: var(--text); margin: 0; text-transform: uppercase; letter-spacing: 0.12em;">
+        GLOBAL <span class="glitch" data-text="LEADERBOARD" style="color: var(--green); text-shadow: 0 0 12px rgba(57,255,136,0.5);">LEADERBOARD</span>
+      </h1>
+      <p class="mono" style="color: var(--green); margin-top: 0.6rem; letter-spacing: 0.25em; font-size: 0.8rem;">
+        ● LIVE TELEMETRY // FIRST BLOOD +50 PTS<span class="caret">_</span>
+      </p>
+    </div>
 
-<br><br>
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <span class="mono" style="color: var(--green); margin-right: 1rem; font-weight: bold;">OPERATIVE_RANKINGS</span>
+        <div style="flex: 1;"></div>
+        <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+      </div>
+      <div class="terminal-body mono" id="lb-table-container">
+        Loading standings...
+      </div>
+    </div>
 
-<a href="/logout">
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <span class="mono" style="color: var(--green); margin-right: 1rem; font-weight: bold;">SHARED_DOCKER_FLEET_FEED</span>
+        <div style="flex: 1;"></div>
+        <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+      </div>
+      <div class="terminal-body mono" id="lb-feed-container">
+        Listening for container deployments and flag captures...
+      </div>
+    </div>
+  </div>
 
-<button>
-Logout
-</button>
+  <!-- ==================== TAB 4: PROFILE ==================== -->
+  <div id="view-profile" style="display: none; max-width: 800px; margin: 0 auto; padding: 2rem;" class="fade-in">
+    <div style="text-align: center; margin: 1.5rem 0;">
+      <h1 class="mono" style="font-size: 3rem; color: var(--text); margin: 0; text-transform: uppercase; letter-spacing: 0.12em;">
+        USER <span class="glitch" data-text="PROFILE" style="color: var(--green); text-shadow: 0 0 12px rgba(57,255,136,0.5);">PROFILE</span>
+      </h1>
+    </div>
 
-</a>
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <span class="mono" style="color: var(--green); margin-right: 1rem; font-weight: bold;">OPERATOR_DOSSIER</span>
+        <div style="flex: 1;"></div>
+        <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+      </div>
+      <div class="terminal-body mono">
+        <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+          <div style="width: 96px; height: 96px; border: 2px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(57,255,136,0.05); box-shadow: 0 0 20px rgba(57,255,136,0.25); font-size: 2rem; color: var(--green); font-weight: bold;">
+            {{ username[0] | upper }}
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <div style="color: var(--green); font-size: 1.4rem; font-weight: bold;">{{ username }}</div>
+            <div><span style="color: var(--amber);">CLEARANCE:</span> SHARED DOCKER FLEET OPERATOR</div>
+            <div style="display: flex; gap: 2.5rem; margin-top: 0.6rem;">
+              <div><div id="prof-pts" style="color: var(--green); font-size: 1.6rem; font-weight: bold;">0</div><div style="color: var(--muted); font-size: 0.72rem;">POINTS</div></div>
+              <div><div id="prof-solved" style="color: var(--green); font-size: 1.6rem; font-weight: bold;">{{ solved_count }}</div><div style="color: var(--muted); font-size: 0.72rem;">SOLVED</div></div>
+              <div><div id="prof-fb" style="color: var(--red); font-size: 1.6rem; font-weight: bold;">0</div><div style="color: var(--muted); font-size: 0.72rem;">1ST BLOOD</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-</div>
+<script>
+const CHALLENGES_META = {{ challenges | tojson }};
+const CHALL_MAP = {};
+CHALLENGES_META.forEach(c => { CHALL_MAP[c.id] = c; });
 
+let currentDiffFilter = 'ALL';
+let currentModuleId = null;
+let latestState = null;
+
+function showTab(tab) {
+  ['challenges', 'detail', 'leaderboard', 'profile'].forEach(t => {
+    document.getElementById('view-' + t).style.display = (t === tab) ? 'block' : 'none';
+  });
+  ['challenges', 'leaderboard', 'profile'].forEach(t => {
+    const btn = document.getElementById('tab-btn-' + t);
+    if (!btn) return;
+    const active = (t === tab || (tab === 'detail' && t === 'challenges'));
+    btn.style.background = active ? 'var(--green)' : 'transparent';
+    btn.style.color = active ? '#000' : 'var(--green)';
+  });
+}
+
+function setDiffFilter(diff) {
+  currentDiffFilter = diff;
+  ['ALL', 'Easy', 'Medium', 'Hard'].forEach(d => {
+    const b = document.getElementById('filter-' + d);
+    b.style.background = (d === diff) ? 'var(--green)' : 'transparent';
+    b.style.color = (d === diff) ? '#000' : 'var(--green)';
+  });
+  filterChallenges();
+}
+
+function filterChallenges() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  document.querySelectorAll('.challenge-card').forEach(card => {
+    const matchText = card.dataset.title.includes(q);
+    const matchDiff = (currentDiffFilter === 'ALL' || card.dataset.diff === currentDiffFilter);
+    card.style.display = (matchText && matchDiff) ? 'block' : 'none';
+  });
+}
+
+function openModuleDetail(cid) {
+  currentModuleId = cid;
+  const c = CHALL_MAP[cid];
+  document.getElementById('detail-header-title').textContent = 'MODULE_' + cid.toUpperCase();
+  document.getElementById('detail-title').textContent = c.title;
+  document.getElementById('detail-cat').textContent = 'CAT: ' + c.category;
+  document.getElementById('detail-pts').textContent = 'PTS: ' + c.points;
+  const diffEl = document.getElementById('detail-diff');
+  diffEl.textContent = c.difficulty;
+  diffEl.className = 'diff-badge diff-' + c.difficulty.toLowerCase();
+  document.getElementById('detail-desc').textContent = c.description;
+  document.getElementById('detail-mechanic').textContent = '🐳 SHARED DOCKER MECHANIC: ' + c.novel_mechanic;
+  document.getElementById('detail-flag-status').innerHTML = '';
+  document.getElementById('detail-flag-input').value = '';
+
+  syncDetailView();
+  showTab('detail');
+}
+
+function syncDetailView() {
+  if (!currentModuleId || !latestState) return;
+  const st = latestState.containers[currentModuleId];
+  const solved = latestState.solved_ids.includes(currentModuleId);
+  document.getElementById('detail-solved-badge').style.display = solved ? 'inline-block' : 'none';
+
+  const deployBtn = document.getElementById('detail-deploy-btn');
+  const connPanel = document.getElementById('detail-connection-panel');
+
+  if (st && st.running) {
+    deployBtn.textContent = `🔗 [ JOIN SHARED CONTAINER (${st.operator_count} ACTIVE OPERATORS) ]`;
+    connPanel.style.display = 'block';
+    const url = `http://${window.location.hostname}:${st.port}/?operator={{ username }}`;
+    const link = document.getElementById('detail-target-link');
+    link.href = url;
+    link.textContent = `http://${window.location.hostname}:${st.port} (Container ID: ${st.container_id})`;
+    document.getElementById('detail-open-tab-btn').href = url;
+    document.getElementById('detail-shared-ops').textContent =
+      `ACTIVE OPERATORS SHARING THIS CONTAINER: ${st.operators.join(', ')}`;
+    document.getElementById('detail-container-id').textContent = `ACTIVE // :${st.port}`;
+  } else {
+    deployBtn.textContent = '[ DEPLOY SHARED DOCKER INSTANCE ]';
+    connPanel.style.display = 'none';
+  }
+}
+
+async function deployCurrentModule() {
+  if (!currentModuleId) return;
+  const btn = document.getElementById('detail-deploy-btn');
+  btn.textContent = '[ DEPLOYING / ATTACHING SHARED CONTAINER... ]';
+  await fetch(`/api/challenge/${currentModuleId}/launch`, {method: 'POST'});
+  await pollState();
+  syncDetailView();
+}
+
+async function restartCurrentModule() {
+  if (!currentModuleId) return;
+  await fetch(`/api/challenge/${currentModuleId}/reset`, {method: 'POST'});
+  await pollState();
+  syncDetailView();
+}
+
+async function stopCurrentModule() {
+  if (!currentModuleId) return;
+  await stopContainer(currentModuleId);
+  syncDetailView();
+}
+
+async function stopContainer(cid) {
+  await fetch(`/api/challenge/${cid}/stop`, {method: 'POST'});
+  await pollState();
+}
+
+async function submitCurrentFlag(e) {
+  e.preventDefault();
+  if (!currentModuleId) return;
+  const flag = document.getElementById('detail-flag-input').value.trim();
+  const statusEl = document.getElementById('detail-flag-status');
+  statusEl.innerHTML = '<span style="color: var(--amber);">Verifying...</span>';
+  const res = await fetch('/api/submit_flag', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({challenge_id: currentModuleId, flag})
+  });
+  const data = await res.json();
+  if (data.correct && data.first_blood) {
+    statusEl.innerHTML = `<span class="mono first-blood" style="padding: 0.3rem 0.8rem; font-weight: bold;">🩸 FIRST BLOOD! +${data.points_awarded} PTS</span>`;
+  } else if (data.correct) {
+    statusEl.innerHTML = `<span style="color: var(--green); text-shadow: 0 0 10px var(--green);">✓ ACCESS GRANTED — ${data.message}</span>`;
+  } else {
+    statusEl.innerHTML = `<span style="color: var(--red);">✗ INCORRECT - TRY AGAIN</span>`;
+  }
+  await pollState();
+  syncDetailView();
+}
+
+async function pollState() {
+  try {
+    const res = await fetch('/api/state');
+    const data = await res.json();
+    latestState = data;
+
+    const total = CHALLENGES_META.length;
+    const solved = data.solved_ids.length;
+    const pct = Math.round((solved / total) * 100);
+
+    // Find current user's score and first bloods
+    const myRow = data.leaderboard.find(r => r.username === "{{ username }}") || {score: 0, fb_count: 0};
+
+    document.getElementById('stat-solved').textContent = solved;
+    document.getElementById('stat-points').textContent = myRow.score;
+    document.getElementById('stat-fb').textContent = myRow.fb_count || 0;
+    document.getElementById('stat-bar').style.width = pct + '%';
+    document.getElementById('stat-pct').textContent = pct + '% COMPLETE';
+    document.getElementById('nav-pts').textContent = myRow.score + ' PTS';
+    document.getElementById('nav-active-containers').textContent =
+      `SHARED DOCKER NODES: ${data.engine.active_containers}/${total}`;
+
+    document.getElementById('prof-pts').textContent = myRow.score;
+    document.getElementById('prof-solved').textContent = solved;
+    document.getElementById('prof-fb').textContent = myRow.fb_count || 0;
+
+    // Update cards
+    for (const [cid, st] of Object.entries(data.containers)) {
+      const badges = document.getElementById('badges-' + cid);
+      const info = document.getElementById('shared-info-' + cid);
+      const leftBtn = document.getElementById('card-left-btn-' + cid);
+      const isSolved = data.solved_ids.includes(cid);
+
+      if (badges) {
+        let html = '';
+        if (isSolved) {
+          html += `<span style="background: var(--green); color: black; padding: 0.15rem 0.45rem; font-size: 0.72rem; font-weight: bold;">SOLVED</span>`;
+        }
+        if (st.running) {
+          html += `<span style="border: 1px solid var(--amber); color: var(--amber); padding: 0.1rem 0.45rem; font-size: 0.72rem;">ACTIVE (${st.operator_count} SHARED)</span>`;
+        }
+        badges.innerHTML = html;
+      }
+
+      if (info) {
+        if (st.running) {
+          info.innerHTML = `
+            <div style="color: var(--green);">● CONTAINER ONLINE [ID: ${st.container_id} | :${st.port}]</div>
+            <div style="color: var(--cyan); margin-top: 0.2rem;">SHARED BY (${st.operator_count}): ${st.operators.join(', ')}</div>
+          `;
+        } else {
+          info.innerHTML = `<div style="color: var(--muted);">○ STANDBY [${st.container_name}] — Deploys on first open</div>`;
+        }
+      }
+
+      if (leftBtn) {
+        leftBtn.innerHTML = st.running
+          ? `<button onclick="event.stopPropagation(); stopContainer('${cid}');" class="mono" style="background: transparent; border: 1px solid var(--red); color: var(--red); padding: 0.2rem 0.5rem; cursor: pointer; font-size: 0.78rem;">[ TERMINATE ]</button>`
+          : '';
+      }
+    }
+
+    // Update Leaderboard Table
+    const lbBox = document.getElementById('lb-table-container');
+    if (data.leaderboard.length === 0) {
+      lbBox.innerHTML = '<div style="text-align:center; color:var(--muted); padding:1.5rem;">No scores yet. Be the first to capture a flag. 🩸</div>';
+    } else {
+      lbBox.innerHTML = `
+        <table class="lb mono">
+          <thead><tr><th>#</th><th>OPERATIVE</th><th>SOLVES</th><th>FIRST BLOODS</th><th style="text-align:right;">PTS</th></tr></thead>
+          <tbody>
+            ${data.leaderboard.map((r, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td style="color:var(--green); font-weight:bold;">${r.username}</td>
+                <td>${r.solves_count}/18</td>
+                <td>${r.fb_count > 0 ? '<span class="first-blood" style="padding:0.1rem 0.4rem; font-size:0.75rem;">🩸 ' + r.fb_count + '</span>' : '-'}</td>
+                <td style="text-align:right; color:var(--amber); font-weight:bold;">${r.score}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Update Feed
+    const feedBox = document.getElementById('lb-feed-container');
+    if (data.feed.length === 0) {
+      feedBox.innerHTML = '<div style="color:var(--muted);">No container events recorded yet.</div>';
+    } else {
+      feedBox.innerHTML = data.feed.map(f => `
+        <div style="padding: 0.45rem 0; border-bottom: 1px solid rgba(57,255,136,0.12); font-size: 0.82rem;">
+          <span style="color:var(--muted);">[${f.created_at}]</span> <span style="color:var(--green);">${f.event_text}</span>
+        </div>
+      `).join('');
+    }
+
+    if (currentModuleId) syncDetailView();
+  } catch (e) {}
+}
+
+pollState();
+setInterval(pollState, 3500);
+</script>
 </body>
-
 </html>
